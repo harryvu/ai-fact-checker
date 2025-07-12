@@ -46,7 +46,7 @@ az staticwebapp create `
     --resource-group $ResourceGroupName `
     --location $Location `
     --sku $SkuName `
-    --source "https://github.com/your-username/your-repo" `
+    --source "https://github.com/harryvu/ai-fact-checker" `
     --branch "main" `
     --app-location "/" `
     --output-location "out" `
