@@ -2,16 +2,16 @@
 
 ## Required GitHub Secrets
 
-Go to https://github.com/harryvu/ai-fact-checker/settings/secrets/actions and add these secrets:
+Go to https://github.com/harryvu/ai-fact-checker/settings/secrets/actions and **UPDATE** these secrets:
 
-### 1. AZURE_STATIC_WEB_APPS_API_TOKEN
-**Value:** `a3e57002f5495b723a0155abfe658d87cc7e9f4570ece884e3f6f91260bdbb0a01-a0332ffcf-c8e5-4957-b454-0ff36faf9fb500f11280dc251f0f`
+### 1. AZURE_STATIC_WEB_APPS_API_TOKEN (UPDATE THIS!)
+**Value:** `2263483a0c96e436bc88c5136b932a809f00e49b2079d753dab2229e29238c81601-337a452a-230e-4c67-a012-3993254ddb3000f1714093b6b90f`
 
 ### 2. NEXT_PUBLIC_API_URL
 **Value:** `https://func-fact-checker-demo.azurewebsites.net/api/fact_check_function`
 
-### 3. NEXTAUTH_URL
-**Value:** `https://salmon-moss-0dc251f0f.1.azurestaticapps.net`
+### 3. NEXTAUTH_URL (UPDATE THIS!)
+**Value:** `https://calm-field-093b6b90f.1.azurestaticapps.net`
 
 ### 4. NEXTAUTH_SECRET
 **Value:** `swCVVFKs4k85L3cUBsXUOf6tBCTBnxlp`
@@ -28,16 +28,22 @@ Go to https://github.com/harryvu/ai-fact-checker/settings/secrets/actions and ad
 ### 8. FACEBOOK_CLIENT_SECRET (optional)
 **Value:** `your-facebook-client-secret`
 
-## Your Static Web App Details
+## Your NEW Static Web App Details
 
-- **Name:** ai-fact-checker
+- **Name:** ai-fact-checker-demo
 - **Resource Group:** rg-fact-checker
-- **URL:** https://salmon-moss-0dc251f0f.1.azurestaticapps.net
+- **URL:** https://calm-field-093b6b90f.1.azurestaticapps.net
 - **Location:** East US 2
+
+## URGENT: Update These Secrets Now!
+
+You need to update these two secrets immediately:
+1. **AZURE_STATIC_WEB_APPS_API_TOKEN** - with the new token above
+2. **NEXTAUTH_URL** - with the new URL above
 
 ## Next Steps
 
-1. Add all the secrets above to your GitHub repository
-2. Push any change to the main branch to trigger deployment
+1. Update the two secrets above in GitHub
+2. Push any change to trigger deployment
 3. Check the Actions tab to see the deployment progress
 4. Update Google OAuth redirect URIs to include the new domain
