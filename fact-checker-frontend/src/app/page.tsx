@@ -10,6 +10,7 @@ export default function Home() {
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
           Verify information instantly with our AI-powered fact-checking tool. 
           Enter any statement and get reliable, source-backed verification.
+          🚀 Now deployed with GitHub Actions!
         </p>
       </div>
       
