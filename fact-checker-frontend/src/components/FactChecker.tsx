@@ -83,7 +83,7 @@ export default function FactChecker() {
     try {
       const response = await factCheckTextStream(
         inputText,
-        session?.user?.id,
+        session?.user?.email || 'anonymous',
         (chunk) => {
           setStreamingResult(prev => prev + chunk)
         }
