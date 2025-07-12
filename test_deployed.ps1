@@ -1,7 +1,7 @@
 Write-Host "Testing Deployed Fact Checker API..." -ForegroundColor Green
 Write-Host "=" * 50 -ForegroundColor Green
 
-$functionUrl = "https://func-fact-checker-v4-202507031710.azurewebsites.net/api/fact_check_function"
+$functionUrl = "https://func-fact-checker-demo.azurewebsites.net/api/fact_check_function"
 
 Write-Host "`nFunction URL: $functionUrl" -ForegroundColor Cyan
 Write-Host "Waiting for function to be ready..." -ForegroundColor Yellow

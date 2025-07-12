@@ -249,9 +249,25 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     """Main Azure Function entry point."""
     logging.info('Python HTTP trigger function processed a request.')
 
+    # CORS headers
+    cors_headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Content-Type": "application/json"
+    }
+
     try:
         # Get request method
         method = req.method.upper()
+        
+        # Handle preflight OPTIONS request
+        if method == "OPTIONS":
+            return func.HttpResponse(
+                "",
+                status_code=200,
+                headers=cors_headers
+            )
         
         if method == "GET":
             return func.HttpResponse(
@@ -268,7 +284,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     }
                 }),
                 status_code=200,
-                headers={"Content-Type": "application/json"}
+                headers=cors_headers
             )
         
         elif method == "POST":
@@ -279,7 +295,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     return func.HttpResponse(
                         json.dumps({"error": "Request body must be valid JSON"}),
                         status_code=400,
-                        headers={"Content-Type": "application/json"}
+                        headers=cors_headers
                     )
                 
                 # Extract parameters
@@ -292,7 +308,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     return func.HttpResponse(
                         json.dumps({"error": "Either 'text' or 'url' parameter is required"}),
                         status_code=400,
-                        headers={"Content-Type": "application/json"}
+                        headers=cors_headers
                     )
                 
                 # Initialize fact checker
@@ -314,32 +330,32 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             return func.HttpResponse(
                                 json.dumps({"error": f"Could not extract text from URL: {url}"}),
                                 status_code=400,
-                                headers={"Content-Type": "application/json"}
+                                headers=cors_headers
                             )
                     except RequestException as e:
                         return func.HttpResponse(
                             json.dumps({"error": f"Error fetching URL: {str(e)}"}),
                             status_code=400,
-                            headers={"Content-Type": "application/json"}
+                            headers=cors_headers
                         )
                     except ArticleException as e:
                         return func.HttpResponse(
                             json.dumps({"error": f"Error parsing article content: {str(e)}"}),
                             status_code=400,
-                            headers={"Content-Type": "application/json"}
+                            headers=cors_headers
                         )
                     except Exception as e:
                         return func.HttpResponse(
                             json.dumps({"error": f"Unexpected error processing URL: {str(e)}"}),
                             status_code=500,
-                            headers={"Content-Type": "application/json"}
+                            headers=cors_headers
                         )
                 
                 if not text or not text.strip():
                     return func.HttpResponse(
                         json.dumps({"error": "No text found to fact check"}),
                         status_code=400,
-                        headers={"Content-Type": "application/json"}
+                        headers=cors_headers
                     )
                 
                 # Perform fact check
@@ -354,34 +370,34 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 return func.HttpResponse(
                     json.dumps(results, indent=2),
                     status_code=200,
-                    headers={"Content-Type": "application/json"}
+                    headers=cors_headers
                 )
                 
             except json.JSONDecodeError:
                 return func.HttpResponse(
                     json.dumps({"error": "Invalid JSON in request body"}),
                     status_code=400,
-                    headers={"Content-Type": "application/json"}
+                    headers=cors_headers
                 )
             except ValueError as e:
                 return func.HttpResponse(
                     json.dumps({"error": str(e)}),
                     status_code=400,
-                    headers={"Content-Type": "application/json"}
+                    headers=cors_headers
                 )
             except Exception as e:
                 logging.error(f"Unexpected error: {str(e)}")
                 return func.HttpResponse(
                     json.dumps({"error": f"Internal server error: {str(e)}"}),
                     status_code=500,
-                    headers={"Content-Type": "application/json"}
+                    headers=cors_headers
                 )
         
         else:
             return func.HttpResponse(
                 json.dumps({"error": f"Method {method} not allowed"}),
                 status_code=405,
-                headers={"Content-Type": "application/json"}
+                headers=cors_headers
             )
     
     except Exception as e:
@@ -389,5 +405,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(
             json.dumps({"error": "Internal server error"}),
             status_code=500,
-            headers={"Content-Type": "application/json"}
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                "Content-Type": "application/json"
+            }
         )
