@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Remove output: 'export' for Azure Static Web Apps to support API routes
+  output: 'export',
   trailingSlash: true,
   images: {
     unoptimized: true,

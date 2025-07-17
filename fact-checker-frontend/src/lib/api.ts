@@ -1,16 +1,15 @@
 import { FactCheckResponse } from '@/lib/types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://func-fact-checker-demo.azurewebsites.net/api/fact_check_function'
-const PROXY_URL = '/api/fact-check'
 
 // Debug logging
 console.log('API_URL:', API_URL)
 console.log('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL)
-console.log('Using proxy URL:', PROXY_URL)
+console.log('Using direct API URL:', API_URL)
 
 export async function factCheckText(text: string, userId?: string): Promise<FactCheckResponse> {
   try {
-    const response = await fetch(PROXY_URL, {
+    const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -39,10 +38,10 @@ export async function factCheckTextStream(
   onChunk?: (chunk: string) => void
 ): Promise<FactCheckResponse> {
   try {
-    console.log('Making API request to:', PROXY_URL)
+    console.log('Making API request to:', API_URL)
     console.log('Request body:', { text, user_id: userId })
     
-    const response = await fetch(PROXY_URL, {
+    const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

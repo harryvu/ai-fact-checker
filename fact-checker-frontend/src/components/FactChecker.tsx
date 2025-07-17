@@ -1,40 +1,28 @@
 'use client'
 
 import { useState } from 'react'
-import { useSession, signIn } from 'next-auth/react'
+// import { useSession, signIn } from 'next-auth/react'  // Disabled for static deployment
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, ExternalLink, CheckCircle, XCircle, AlertCircle, LogIn, Lock } from 'lucide-react'
+import { Loader2, ExternalLink, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { factCheckTextStream } from '@/lib/api'
 import { FactCheckResponse } from '@/lib/types'
 
 export default function FactChecker() {
-  const { data: session, status } = useSession()
+  // Temporarily disable authentication for static deployment
+  const session = { user: { id: 'anonymous', email: 'anonymous@example.com' } }
+  
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [streamingResult, setStreamingResult] = useState('')
   const [result, setResult] = useState<FactCheckResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Show loading state while checking authentication
-  if (status === 'loading') {
-    return (
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center gap-2 text-gray-500">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              <span>Loading...</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
+  // Authentication is disabled for static deployment
   // Show sign-in prompt if not authenticated
+  /*
   if (!session) {
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -54,7 +42,7 @@ export default function FactChecker() {
                 Please sign in with your Google account to verify information using our AI-powered fact-checking tool.
               </p>
               <Button
-                onClick={() => signIn()}
+                onClick={() => {}} // signIn() disabled for static deployment
                 className="flex items-center gap-2"
               >
                 <LogIn className="h-4 w-4" />
@@ -66,6 +54,7 @@ export default function FactChecker() {
       </div>
     )
   }
+  */
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

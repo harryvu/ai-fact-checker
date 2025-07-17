@@ -1,6 +1,6 @@
 'use client'
 
-import { SessionProvider } from 'next-auth/react'
+// import { SessionProvider } from 'next-auth/react'  // Disabled for static deployment
 import { ReactNode } from 'react'
 
 interface ProvidersProps {
@@ -8,9 +8,10 @@ interface ProvidersProps {
 }
 
 export default function Providers({ children }: ProvidersProps) {
+  // Disable SessionProvider for static deployment
   return (
-    <SessionProvider>
+    <>
       {children}
-    </SessionProvider>
+    </>
   )
 }
