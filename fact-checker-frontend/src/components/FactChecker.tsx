@@ -109,7 +109,7 @@ export default function FactChecker() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -120,7 +120,7 @@ export default function FactChecker() {
             Enter text to verify its accuracy using AI-powered fact-checking
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 md:px-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="fact-text" className="block text-sm font-medium mb-2">
@@ -187,10 +187,10 @@ export default function FactChecker() {
               Overall Rating: {result.overall_rating}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 px-4 md:px-6">
             <div>
               <h4 className="font-semibold mb-2">Summary:</h4>
-              <p className="text-sm bg-white p-3 rounded border">
+              <p className="text-sm bg-white p-3 rounded border break-words">
                 {result.summary}
               </p>
             </div>
@@ -201,17 +201,17 @@ export default function FactChecker() {
                 <div className="grid gap-3">
                   {result.claims.map((claim, index) => (
                     <Card key={index} className="bg-white">
-                      <CardContent className="pt-4">
+                      <CardContent className="pt-4 px-4">
                         <div className="space-y-2">
                           <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1">
-                              <h5 className="font-medium text-sm mb-1">
+                            <div className="flex-1 min-w-0 pr-2">
+                              <h5 className="font-medium text-sm mb-1 break-words">
                                 {claim.claim}
                               </h5>
                               <Badge variant="outline" className="text-xs mb-2">
                                 {claim.rating}
                               </Badge>
-                              <p className="text-xs text-gray-600 mb-2">
+                              <p className="text-xs text-gray-600 mb-2 break-words">
                                 {claim.explanation}
                               </p>
                               {claim.sources && claim.sources.length > 0 && (
@@ -219,15 +219,15 @@ export default function FactChecker() {
                                   <span className="font-medium">Sources:</span>
                                   <ul className="mt-1 space-y-1">
                                     {claim.sources.map((source, sourceIndex) => (
-                                      <li key={sourceIndex}>
+                                      <li key={sourceIndex} className="break-all">
                                         <a
                                           href={source}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                                          className="text-blue-600 hover:text-blue-800 inline-flex items-start gap-1 break-all overflow-wrap-anywhere"
                                         >
-                                          <ExternalLink className="h-3 w-3" />
-                                          {source}
+                                          <ExternalLink className="h-3 w-3 flex-shrink-0 mt-0.5" />
+                                          <span className="break-all overflow-wrap-anywhere leading-tight">{source}</span>
                                         </a>
                                       </li>
                                     ))}
