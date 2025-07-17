@@ -35,12 +35,20 @@ jobs:
       - name: Debug environment
         run: |
           echo "Checking deployment token..."
+          echo "Repository: ${{ github.repository }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Event: ${{ github.event_name }}"
+          
           if [ -n "${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}" ]; then
             echo "✅ AZURE_STATIC_WEB_APPS_API_TOKEN is set"
             echo "Token length: $(echo '${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}' | wc -c)"
+            echo "First 10 chars: $(echo '${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}' | cut -c1-10)"
           else
             echo "❌ AZURE_STATIC_WEB_APPS_API_TOKEN is NOT set"
           fi
+          
+          echo "All available secrets (names only):"
+          echo "Available context: ${{ toJSON(secrets) }}"
       
       - name: Build And Deploy
         id: builddeploy
