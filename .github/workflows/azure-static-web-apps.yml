@@ -34,7 +34,7 @@ jobs:
       
       - name: Debug environment
         run: |
-          echo "Checking deployment token..."
+          echo "Checking deployment token - secret should now be available..."
           echo "Repository: ${{ github.repository }}"
           echo "Actor: ${{ github.actor }}"
           echo "Event: ${{ github.event_name }}"
