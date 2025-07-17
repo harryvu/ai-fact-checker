@@ -38,17 +38,28 @@ jobs:
           echo "Repository: ${{ github.repository }}"
           echo "Actor: ${{ github.actor }}"
           echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Event Type: ${{ github.event_name }}"
           
+          # Check if secret exists and show debug info
           if [ -n "${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}" ]; then
             echo "✅ AZURE_STATIC_WEB_APPS_API_TOKEN is set"
             echo "Token length: $(echo '${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}' | wc -c)"
             echo "First 10 chars: $(echo '${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}' | cut -c1-10)"
+            echo "Last 10 chars: $(echo '${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}' | tail -c 11)"
           else
             echo "❌ AZURE_STATIC_WEB_APPS_API_TOKEN is NOT set"
           fi
           
           echo "All available secrets (names only):"
           echo "Available context: ${{ toJSON(secrets) }}"
+          
+          # Additional debug
+          echo "Environment variables:"
+          env | grep -i azure || echo "No Azure env vars found"
+          echo "Workflow context:"
+          echo "github.actor: ${{ github.actor }}"
+          echo "github.repository: ${{ github.repository }}"
       
       - name: Build And Deploy
         id: builddeploy
@@ -60,6 +71,7 @@ jobs:
           app_location: "fact-checker-frontend"
           api_location: ""
           output_location: "out"
+          skip_deploy_on_missing_secrets: true
         env:
           AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
