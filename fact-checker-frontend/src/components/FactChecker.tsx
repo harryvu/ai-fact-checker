@@ -254,10 +254,10 @@ export default function FactChecker() {
                       href={citation}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                      className="text-xs text-blue-600 hover:text-blue-800 inline-flex items-start gap-1 break-all overflow-hidden"
                     >
-                      <ExternalLink className="h-3 w-3" />
-                      {citation}
+                      <ExternalLink className="h-3 w-3 flex-shrink-0 mt-0.5" />
+                      <span className="break-all overflow-wrap-anywhere">{citation}</span>
                     </a>
                   ))}
                 </div>
