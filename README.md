@@ -5,10 +5,11 @@ A serverless fact-checking API built with Azure Functions that uses Perplexity's
 ## Features
 
 - HTTP API endpoint for fact-checking text content
-- Support for URL-based article analysis
+- Support for URL-based article analysis  
 - Multiple Perplexity model options
 - Structured and unstructured output formats
 - Comprehensive error handling and logging
+- Mobile-responsive Next.js frontend with proper text wrapping
 
 ## Setup
 
