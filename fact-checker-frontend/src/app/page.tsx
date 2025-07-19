@@ -1,4 +1,5 @@
 import FactChecker from "@/components/FactChecker";
+import AnalyticsNotice from "@/components/AnalyticsNotice";
 
 export default function Home() {
   return (
@@ -14,6 +15,8 @@ export default function Home() {
       
       <FactChecker />
       <p className="text-sm text-gray-300 max-w-2xl mx-auto">Disclaimer: This tool uses AI to assist with fact-checking and may not always reflect the most current or accurate information. Users should independently verify critical facts from trusted sources.</p>
+      
+      <AnalyticsNotice />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, ExternalLink, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { factCheckTextStream } from '@/lib/api'
 import { FactCheckResponse } from '@/lib/types'
+import { trackFactCheckRequest, trackFactCheckSuccess, trackFactCheckError, trackUserEngagement } from '@/lib/analytics'
 
 export default function FactChecker() {
   // Temporarily disable authentication for static deployment
@@ -61,6 +62,7 @@ export default function FactChecker() {
     
     if (!inputText.trim()) {
       setError('Please enter some text to fact-check')
+      trackUserEngagement('empty_input_error')
       return
     }
 
@@ -68,6 +70,11 @@ export default function FactChecker() {
     setError(null)
     setResult(null)
     setStreamingResult('')
+
+    const startTime = Date.now()
+    
+    // Track fact check request
+    trackFactCheckRequest('text', 'sonar-pro', inputText.length)
 
     try {
       const response = await factCheckTextStream(
@@ -79,8 +86,29 @@ export default function FactChecker() {
       )
       
       setResult(response)
+      
+      // Track successful fact check
+      const processingTime = Date.now() - startTime
+      trackFactCheckSuccess(
+        response.overall_rating || 'unknown',
+        response.claims?.length || 0,
+        processingTime
+      )
+      
+      trackUserEngagement('fact_check_completed', {
+        result_rating: response.overall_rating,
+        claims_count: response.claims?.length || 0
+      })
+      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
+      setError(errorMessage)
+      
+      // Track fact check error
+      trackFactCheckError(errorMessage)
+      trackUserEngagement('fact_check_failed', {
+        error_type: errorMessage
+      })
     } finally {
       setIsLoading(false)
     }
@@ -130,7 +158,14 @@ export default function FactChecker() {
                 id="fact-text"
                 placeholder="Enter the text you want to fact-check..."
                 value={inputText}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInputText(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                  setInputText(e.target.value)
+                  // Track user engagement when they start typing
+                  if (e.target.value.length === 1) {
+                    trackUserEngagement('started_typing')
+                  }
+                }}
+                onFocus={() => trackUserEngagement('textarea_focused')}
                 className="min-h-[100px]"
                 disabled={isLoading}
               />
@@ -225,6 +260,10 @@ export default function FactChecker() {
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="text-blue-600 hover:text-blue-800 inline-flex items-start gap-1 break-all overflow-wrap-anywhere"
+                                          onClick={() => trackUserEngagement('source_link_clicked', { 
+                                            source_url: source,
+                                            claim_index: index 
+                                          })}
                                         >
                                           <ExternalLink className="h-3 w-3 flex-shrink-0 mt-0.5" />
                                           <span className="break-all overflow-wrap-anywhere leading-tight">{source}</span>
@@ -255,6 +294,10 @@ export default function FactChecker() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-blue-600 hover:text-blue-800 inline-flex items-start gap-1 break-all overflow-hidden"
+                      onClick={() => trackUserEngagement('citation_link_clicked', { 
+                        citation_url: citation,
+                        citation_index: index 
+                      })}
                     >
                       <ExternalLink className="h-3 w-3 flex-shrink-0 mt-0.5" />
                       <span className="break-all overflow-wrap-anywhere">{citation}</span>
