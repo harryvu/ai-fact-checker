@@ -103,7 +103,11 @@ class FactChecker:
             return (
                 "You are a professional fact-checker with extensive research capabilities. "
                 "Your task is to evaluate claims or articles for factual accuracy. "
-                "Focus on identifying false, misleading, or unsubstantiated claims."
+                "Focus on identifying false, misleading, or unsubstantiated claims. "
+                "CRITICAL REQUIREMENT: You MUST detect the language of the input text and respond ENTIRELY in that SAME language. "
+                "EVERY SINGLE PART of your response must be in the same language as the input: the summary, claim explanations, "
+                "all descriptive text, and source descriptions. The ONLY exceptions are rating values (TRUE, FALSE, etc.) and "
+                "JSON field names which should remain in English. Do NOT mix languages. Do NOT use English phrases in non-English responses."
             )
 
     def check_claim(self, text: str, model: str = DEFAULT_MODEL, use_structured_output: bool = False) -> Dict[str, Any]:
@@ -148,7 +152,8 @@ class FactChecker:
             response.raise_for_status()
             result = response.json()
             
-            citations = result.get("citations", [])
+            # Get citations from API response for resolving references
+            api_citations = result.get("citations", [])
             
             if "choices" in result and result["choices"] and "message" in result["choices"][0]:
                 content = result["choices"][0]["message"]["content"]
@@ -156,21 +161,17 @@ class FactChecker:
                 if can_use_structured_output:
                     try:
                         parsed = json.loads(content)
-                        if citations and "citations" not in parsed:
-                            parsed["citations"] = citations
                         # Resolve citation references in the structured output
-                        if citations and "claims" in parsed:
-                            self._resolve_citations_in_claims(parsed["claims"], citations)
+                        if api_citations and "claims" in parsed:
+                            self._resolve_citations_in_claims(parsed["claims"], api_citations)
                         return parsed
                     except json.JSONDecodeError as e:
-                        return {"error": f"Failed to parse structured output: {str(e)}", "raw_response": content, "citations": citations}
+                        return {"error": f"Failed to parse structured output: {str(e)}", "raw_response": content}
                 else:
                     parsed = self._parse_response(content)
-                    if citations and "citations" not in parsed:
-                        parsed["citations"] = citations
                     # Resolve citation references in the parsed output
-                    if citations and "claims" in parsed:
-                        self._resolve_citations_in_claims(parsed["claims"], citations)
+                    if api_citations and "claims" in parsed:
+                        self._resolve_citations_in_claims(parsed["claims"], api_citations)
                     return parsed
             
             return {"error": "Unexpected API response format", "raw_response": result}
@@ -182,13 +183,13 @@ class FactChecker:
         except Exception as e:
             return {"error": f"Unexpected error: {str(e)}"}
 
-    def _resolve_citations_in_claims(self, claims: List[Dict[str, Any]], citations: List[str]) -> None:
+    def _resolve_citations_in_claims(self, claims: List[Dict[str, Any]], api_citations: List[str]) -> None:
         """
         Resolve citation references like [1], [2] to actual URLs in the claims.
         
         Args:
             claims: List of claim dictionaries to update
-            citations: List of actual citation URLs
+            api_citations: List of actual citation URLs from the API
         """
         for claim in claims:
             if "sources" in claim and claim["sources"]:
@@ -197,8 +198,8 @@ class FactChecker:
                     m = re.match(r"\[(\d+)\]", source.strip())
                     if m:
                         idx = int(m.group(1)) - 1
-                        if 0 <= idx < len(citations):
-                            updated_sources.append(citations[idx])
+                        if 0 <= idx < len(api_citations):
+                            updated_sources.append(api_citations[idx])
                         else:
                             updated_sources.append(source)
                     else:
@@ -294,11 +295,6 @@ def display_results(results: Dict[str, Any], format_json: bool = False):
                     print(f"  - {citation}")
             else:
                 print(f"  {results['extracted_citations']}")
-    
-    if "citations" in results:
-        print("\nCitations:")
-        for citation in results["citations"]:
-            print(f"  - {citation}")
 
 
 def main():

@@ -61,12 +61,54 @@ class FactChecker:
 
     def _get_default_system_prompt(self) -> str:
         """
-        Get the default system prompt.
+        Get the default system prompt from file.
 
         Returns:
             The system prompt as a string
         """
-        return """You are a professional fact-checker with extensive research capabilities. Your task is to evaluate claims or articles for factual accuracy. Focus on identifying false, misleading, or unsubstantiated claims.
+        try:
+            # Try to read from system_prompt.md file
+            import os
+            script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            system_prompt_path = os.path.join(script_dir, "system_prompt.md")
+            
+            if os.path.exists(system_prompt_path):
+                with open(system_prompt_path, 'r', encoding='utf-8') as f:
+                    return f.read().strip()
+        except Exception as e:
+            logging.warning(f"Could not read system_prompt.md: {e}")
+        
+        # Fallback to hardcoded prompt with enhanced language instructions
+        return """⚠️ MANDATORY LANGUAGE RULE: YOU MUST RESPOND IN THE SAME LANGUAGE AS THE INPUT TEXT ⚠️
+
+You are a professional fact-checker with extensive research capabilities. Your task is to evaluate claims or articles for factual accuracy. Focus on identifying false, misleading, or unsubstantiated claims.
+
+## 🚨 CRITICAL LANGUAGE DETECTION STEPS 🚨
+
+STEP 1: READ THE INPUT TEXT CAREFULLY
+STEP 2: IDENTIFY THE LANGUAGE (English, Vietnamese, Spanish, etc.)
+STEP 3: WRITE YOUR ENTIRE RESPONSE IN THAT EXACT SAME LANGUAGE
+STEP 4: DOUBLE-CHECK that summary, explanations, and all text match the input language
+
+⚠️ EXAMPLES TO FOLLOW EXACTLY ⚠️
+
+**IF INPUT IS ENGLISH (like "The Earth is flat"):**
+- summary: "This claim is completely false according to scientific evidence..." (ENGLISH)
+- explanation: "The Earth is actually spherical as confirmed by..." (ENGLISH)
+- claim: "The Earth is flat" (keep original)
+
+**IF INPUT IS VIETNAMESE (like "Trái đất có hình phẳng"):**
+- summary: "Tuyên bố này hoàn toàn sai theo bằng chứng khoa học..." (VIETNAMESE)
+- explanation: "Trái đất thực tế có hình cầu được xác nhận bởi..." (VIETNAMESE)
+- claim: "Trái đất có hình phẳng" (keep original)
+
+⚠️ NEVER MIX LANGUAGES! The only English exceptions are:
+- Rating values: TRUE, FALSE, MISLEADING, UNVERIFIABLE  
+- Overall rating: MOSTLY_TRUE, MIXED, MOSTLY_FALSE
+- JSON field names: "summary", "claims", etc.
+
+## Source Count Requirements
+⚠️ IMPORTANT: Each claim MUST have at least 3 but no more than 10 distinct, high-quality sources.
 
 ## Evaluation Process
 For each piece of content, you will:
@@ -100,13 +142,13 @@ Respond in JSON format with the following structure:
 ```json
 {
     "overall_rating": "MOSTLY_TRUE|MIXED|MOSTLY_FALSE",
-    "summary": "Brief summary of your overall findings",
+    "summary": "Brief summary of your overall findings (in same language as input)",
     "claims": [
         {
-            "claim": "The specific claim extracted from the text",
+            "claim": "The specific claim extracted from the text (in same language as input)",
             "rating": "TRUE|FALSE|MISLEADING|UNVERIFIABLE",
-            "explanation": "Your explanation with supporting evidence",
-            "sources": ["Source 1", "Source 2"]
+            "explanation": "Your explanation with supporting evidence (in same language as input)",
+            "sources": ["Source URL 1", "Source URL 2", "Source URL 3", ...]
         }
     ]
 }
@@ -116,6 +158,37 @@ Respond in JSON format with the following structure:
 - MOSTLY_TRUE: Most claims are true, with minor inaccuracies that don't affect the main message
 - MIXED: The content contains a roughly equal mix of true and false/misleading claims
 - MOSTLY_FALSE: Most claims are false or misleading"""
+
+    def _detect_language(self, text: str) -> str:
+        """
+        Simple language detection based on character patterns.
+        
+        Args:
+            text: The input text to analyze
+            
+        Returns:
+            The detected language name
+        """
+        text = text.lower().strip()
+        
+        # Vietnamese indicators
+        vietnamese_chars = set('áàạảãâấầậẩẫăắằặẳẵéèẹẻẽêếềệểễíìịỉĩóòọỏõôốồộổỗơớờợởỡúùụủũưứừựửữýỳỵỷỹđ')
+        vietnamese_words = {'là', 'có', 'được', 'của', 'và', 'trái', 'đất', 'hình', 'phẳng', 'với', 'trong', 'này', 'cho', 'một', 'không', 'sẽ', 'đã', 'tại', 'về', 'từ', 'như', 'khi', 'nếu', 'vì', 'để', 'hoặc', 'mà', 'thì', 'đó', 'họ', 'tôi', 'bạn', 'chúng', 'những'}
+        
+        # Check for Vietnamese characters
+        has_vietnamese_chars = any(char in vietnamese_chars for char in text)
+        
+        # Check for Vietnamese words
+        words = text.split()
+        vietnamese_word_count = sum(1 for word in words if word in vietnamese_words)
+        vietnamese_ratio = vietnamese_word_count / len(words) if words else 0
+        
+        # If significant Vietnamese indicators, classify as Vietnamese
+        if has_vietnamese_chars or vietnamese_ratio > 0.2:
+            return "Vietnamese"
+        
+        # Default to English
+        return "English"
 
     def check_claim(self, text: str, model: str = DEFAULT_MODEL, use_structured_output: bool = False) -> Dict[str, Any]:
         """
@@ -132,7 +205,11 @@ Respond in JSON format with the following structure:
         if not text or not text.strip():
             return {"error": "Input text is empty. Cannot perform fact check."}
         
-        user_prompt = f"Fact check the following text and identify any false or misleading claims:\n\n{text}"
+        # Detect language and create explicit instruction
+        detected_language = self._detect_language(text)
+        language_instruction = f"\n\n🚨 CRITICAL: The input text is in {detected_language}. You MUST respond entirely in {detected_language}. Do NOT use any other language in your response. Every word of your summary and explanation must be in {detected_language}."
+        
+        user_prompt = f"Fact check the following text and identify any false or misleading claims:\n\n{text}{language_instruction}"
 
         headers = {
             "accept": "application/json",
@@ -160,7 +237,8 @@ Respond in JSON format with the following structure:
             response.raise_for_status()
             result = response.json()
             
-            citations = result.get("citations", [])
+            # Get citations from API response for resolving references
+            api_citations = result.get("citations", [])
             
             if "choices" in result and result["choices"] and "message" in result["choices"][0]:
                 content = result["choices"][0]["message"]["content"]
@@ -168,21 +246,17 @@ Respond in JSON format with the following structure:
                 if can_use_structured_output:
                     try:
                         parsed = json.loads(content)
-                        if citations and "citations" not in parsed:
-                            parsed["citations"] = citations
                         # Resolve citation references in the structured output
-                        if citations and "claims" in parsed:
-                            self._resolve_citations_in_claims(parsed["claims"], citations)
+                        if api_citations and "claims" in parsed:
+                            self._resolve_citations_in_claims(parsed["claims"], api_citations)
                         return parsed
                     except json.JSONDecodeError as e:
-                        return {"error": f"Failed to parse structured output: {str(e)}", "raw_response": content, "citations": citations}
+                        return {"error": f"Failed to parse structured output: {str(e)}", "raw_response": content}
                 else:
                     parsed = self._parse_response(content)
-                    if citations and "citations" not in parsed:
-                        parsed["citations"] = citations
                     # Resolve citation references in the parsed output
-                    if citations and "claims" in parsed:
-                        self._resolve_citations_in_claims(parsed["claims"], citations)
+                    if api_citations and "claims" in parsed:
+                        self._resolve_citations_in_claims(parsed["claims"], api_citations)
                     return parsed
             
             return {"error": "Unexpected API response format", "raw_response": result}
@@ -194,13 +268,13 @@ Respond in JSON format with the following structure:
         except Exception as e:
             return {"error": f"Unexpected error: {str(e)}"}
 
-    def _resolve_citations_in_claims(self, claims: List[Dict[str, Any]], citations: List[str]) -> None:
+    def _resolve_citations_in_claims(self, claims: List[Dict[str, Any]], api_citations: List[str]) -> None:
         """
         Resolve citation references like [1], [2] to actual URLs in the claims.
         
         Args:
             claims: List of claim dictionaries to update
-            citations: List of actual citation URLs
+            api_citations: List of actual citation URLs from the API
         """
         for claim in claims:
             if "sources" in claim and claim["sources"]:
@@ -209,8 +283,8 @@ Respond in JSON format with the following structure:
                     m = re.match(r"\[(\d+)\]", source.strip())
                     if m:
                         idx = int(m.group(1)) - 1
-                        if 0 <= idx < len(citations):
-                            updated_sources.append(citations[idx])
+                        if 0 <= idx < len(api_citations):
+                            updated_sources.append(api_citations[idx])
                         else:
                             updated_sources.append(source)
                     else:

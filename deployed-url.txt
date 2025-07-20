@@ -1,1 +1,1 @@
-https://func-fact-checker-demo.azurewebsites.net/api/fact_check_function
+﻿https://func-fact-checker-demo.azurewebsites.net/api/fact_check_function
